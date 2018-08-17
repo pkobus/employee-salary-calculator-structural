@@ -6,18 +6,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import pl.patikod.employeesalarycalculator.model.Employee;
-import pl.patikod.employeesalarycalculator.model.EmployeeFixedSalary;
-import pl.patikod.employeesalarycalculator.model.EmployeeHourlyRate;
-import pl.patikod.employeesalarycalculator.model.EmployeeProvisionValue;
 import pl.patikod.employeesalarycalculator.model.EmployeeSellingValue;
 import pl.patikod.employeesalarycalculator.model.EmployeeTimeSheet;
-import pl.patikod.employeesalarycalculator.model.SalaryCalculationType;
-import pl.patikod.employeesalarycalculator.repository.EmployeeFixedSalaryRepository;
-import pl.patikod.employeesalarycalculator.repository.EmployeeHourlyRateRepository;
-import pl.patikod.employeesalarycalculator.repository.EmployeeProvisionValueRepository;
+import pl.patikod.employeesalarycalculator.model.salarycalculation.FixedSalaryCalculator;
+import pl.patikod.employeesalarycalculator.model.salarycalculation.HourlyRateSalaryCalculator;
+import pl.patikod.employeesalarycalculator.model.salarycalculation.ProvisionValueSalaryCalculator;
 import pl.patikod.employeesalarycalculator.repository.EmployeeRepository;
 import pl.patikod.employeesalarycalculator.repository.EmployeeSellingValueRepository;
 import pl.patikod.employeesalarycalculator.repository.EmployeeTimeSheetRepository;
+import pl.patikod.employeesalarycalculator.repository.SalaryCalculatorRepository;
 import pl.patikod.employeesalarycalculator.service.EmployeeSalaryCalculatorService;
 
 import java.math.BigDecimal;
@@ -36,7 +33,7 @@ public class EmployeeSalaryCalculatorApplicationTests {
 	private static final String SURNAME_KOWALSKI = "KOWALSKI";
 	private static final BigDecimal HOURLY_RATE_15 = new BigDecimal("15");
 	private static final int HOURS_168 = 168;
-	private static final BigDecimal PROVISION_20 = new BigDecimal("20");
+	private static final BigDecimal PROVISION_20 = new BigDecimal("0.20");
 	private static final BigDecimal SELLING_VALUE_20_000 = new BigDecimal("20000");
 	private static final BigDecimal SALARY_1500 = new BigDecimal("1500");
 	private static final BigDecimal SALARY_2520 = new BigDecimal("2520");
@@ -46,19 +43,13 @@ public class EmployeeSalaryCalculatorApplicationTests {
 	private EmployeeRepository employeeRepository;
 
 	@Autowired
-	private EmployeeFixedSalaryRepository employeeFixedSalaryRepository;
-
-	@Autowired
-	private EmployeeHourlyRateRepository employeeHourlyRateRepository;
-
-	@Autowired
 	private EmployeeTimeSheetRepository employeeTimeSheetRepository;
 
 	@Autowired
 	private EmployeeSellingValueRepository employeeSellingValueRepository;
 
 	@Autowired
-	private EmployeeProvisionValueRepository employeeProvisionValueRepository;
+	private SalaryCalculatorRepository salaryCalculatorRepository;
 
 	@Autowired
 	private EmployeeSalaryCalculatorService employeeSalaryCalculatorService;
@@ -98,12 +89,10 @@ public class EmployeeSalaryCalculatorApplicationTests {
 		Employee employee = new Employee();
 		employee.setName(NAME_JAN);
 		employee.setSurname(SURNAME_NOWAK);
-		employee.setSalaryCalculationType(SalaryCalculationType.FIXED);
+		FixedSalaryCalculator salaryCalculator = new FixedSalaryCalculator(SALARY_1500);
+		salaryCalculatorRepository.save(salaryCalculator);
+		employee.setSalaryCalculator(salaryCalculator);
 		employee = employeeRepository.save(employee);
-		EmployeeFixedSalary employeeFixedSalary = new EmployeeFixedSalary();
-		employeeFixedSalary.setEmployee(employee);
-		employeeFixedSalary.setSalary(SALARY_1500);
-		employeeFixedSalaryRepository.save(employeeFixedSalary);
 		return employee;
 	}
 
@@ -111,16 +100,15 @@ public class EmployeeSalaryCalculatorApplicationTests {
 		Employee employee = new Employee();
 		employee.setName(NAME_PATRYK);
 		employee.setSurname(SURNAME_KOBUS);
-		employee.setSalaryCalculationType(SalaryCalculationType.HOURLY);
 		employee = employeeRepository.save(employee);
-		EmployeeHourlyRate employeeHourlyRate = new EmployeeHourlyRate();
-		employeeHourlyRate.setEmployee(employee);
-		employeeHourlyRate.setRate(HOURLY_RATE_15);
-		employeeHourlyRateRepository.save(employeeHourlyRate);
 		EmployeeTimeSheet timeSheet = new EmployeeTimeSheet();
 		timeSheet.setEmployee(employee);
 		timeSheet.setHours(HOURS_168);
 		employeeTimeSheetRepository.save(timeSheet);
+		HourlyRateSalaryCalculator salaryCalculator = new HourlyRateSalaryCalculator(HOURLY_RATE_15, timeSheet);
+		salaryCalculatorRepository.save(salaryCalculator);
+		employee.setSalaryCalculator(salaryCalculator);
+		employee = employeeRepository.save(employee);
 		return employee;
 	}
 
@@ -128,16 +116,15 @@ public class EmployeeSalaryCalculatorApplicationTests {
 		Employee employee = new Employee();
 		employee.setName(NAME_JANUSZ);
 		employee.setSurname(SURNAME_KOWALSKI);
-		employee.setSalaryCalculationType(SalaryCalculationType.PERCENTAGE);
 		employee = employeeRepository.save(employee);
-		EmployeeProvisionValue employeeProvisionValue = new EmployeeProvisionValue();
-		employeeProvisionValue.setEmployee(employee);
-		employeeProvisionValue.setProvision(PROVISION_20);
-		employeeProvisionValueRepository.save(employeeProvisionValue);
 		EmployeeSellingValue employeeSellingValue = new EmployeeSellingValue();
 		employeeSellingValue.setEmployee(employee);
-		employeeSellingValue.setSellingValue(SELLING_VALUE_20_000);
+		employeeSellingValue.setValue(SELLING_VALUE_20_000);
 		employeeSellingValueRepository.save(employeeSellingValue);
+		ProvisionValueSalaryCalculator provisionValueSalaryCalculator = new ProvisionValueSalaryCalculator(PROVISION_20, employeeSellingValue);
+		salaryCalculatorRepository.save(provisionValueSalaryCalculator);
+		employee.setSalaryCalculator(provisionValueSalaryCalculator);
+		employee = employeeRepository.save(employee);
 		return employee;
 	}
 

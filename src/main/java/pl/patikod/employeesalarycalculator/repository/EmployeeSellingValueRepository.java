@@ -7,6 +7,4 @@ import pl.patikod.employeesalarycalculator.model.EmployeeSellingValue;
 @Repository
 public interface EmployeeSellingValueRepository extends JpaRepository<EmployeeSellingValue, Long> {
 
-    EmployeeSellingValue findActualEmployeeSellingValueByEmployeeId(Long employeeId);
-
 }

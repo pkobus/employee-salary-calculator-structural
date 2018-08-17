@@ -13,11 +13,11 @@ import java.math.BigDecimal;
 public class EmployeeSellingValue {
 
     @Id
-    @GeneratedValue()
+    @GeneratedValue
     private Long id;
 
     @OneToOne
     private Employee employee;
 
-    private BigDecimal sellingValue;
+    private BigDecimal value;
 }
